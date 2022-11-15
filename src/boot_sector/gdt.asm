@@ -1,35 +1,31 @@
-; Global Descriptor Table
+CODE_SEG equ gdt_code - gdt_start
+DATA_SEG equ gdt_data - gdt_start
 
-                                ; empty segment because GDT starts with that
-GDT_start:                      ; don't remove the labels, they're needed to compute sizes and jumps
-                                ; the GDT starts with a null 8-byte
-    dd 0x0                      ; 4 byte
-    dd 0x0                      ; 4 byte
+gdt_start:
 
-                                ; code segment
-GDT_code: 
-    dw 0xffff                   ; segment length, bits 0-15
-    dw 0x0                      ; segment base, bits 0-15
-    db 0x0                      ; segment base, bits 16-23
-    db 10011010b                ; flags (8 bits)
-    db 11001111b                ; flags (4 bits) + segment length, bits 16-19
-    db 0x0                      ; segment base, bits 24-31
+gdt_null:
+    dd 0x0
+    dd 0x0
+                                            ; offset 0x8
+gdt_code:                                   ; CS SHOULD POINT TO THIS
+    dw 0xffff                               ; Segment limit first 0-15 bits
+    dw 0                                    ; Base first 0-15 bits
+    db 0                                    ; Base 16-23 bits
+    db 0x9a                                 ; Access byte
+    db 11001111b                            ; High 4 bit flags and the low 4 bit flags
+    db 0                                    ; Base 24-31 bits
 
-                                ; data segment, same as GDT_code except for one flag
-GDT_data:
-    dw 0xffff
-    dw 0x0
-    db 0x0
-    db 10010010b                ; flag differs from code segment
-    db 11001111b
-    db 0x0
+                                            ; offset 0x10
+gdt_data:                                   ; DS, SS, ES, FS, GS
+    dw 0xffff                               ; Segment limit first 0-15 bits
+    dw 0                                    ; Base first 0-15 bits
+    db 0                                    ; Base 16-23 bits
+    db 0x92                                 ; Access byte
+    db 11001111b                            ; High 4 bit flags and the low 4 bit flags
+    db 0                                    ; Base 24-31 bits
 
-GDT_end:
+gdt_end:
 
-GDT_descriptor:
-    dw GDT_end - GDT_start - 1  ; size (16 bit), always one less of its true size
-    dd GDT_start                ; address (32 bit)
-
-; offsets to the segments in the GDT
-CODE_SEG equ GDT_code - GDT_start
-DATA_SEG equ GDT_data - GDT_start
+gdt_descriptor:
+    dw gdt_end - gdt_start-1
+    dd gdt_start

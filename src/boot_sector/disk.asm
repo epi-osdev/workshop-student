@@ -1,43 +1,51 @@
-; loading kernel from hard drive
-; load 'dh' sectors from drive 'dl' into ES:BX
+ata_lba_read:
+    mov ebx, eax,                           ; Backup the LBA
+                                            ; Send the highest 8 bits of the lba to hard disk controller
+    shr eax, 24
+    or eax, 0xE0                            ; Select the  master drive
+    mov dx, 0x1F6
+    out dx, al
+                                            ; Finished sending the highest 8 bits of the lba
+                                            ; Send the total sectors to read
+    mov eax, ecx
+    mov dx, 0x1F2
+    out dx, al
+                                            ; Finished sending the total sectors to read
+                                            ; Send more bits of the LBA
+    mov eax, ebx                            ; Restore the backup LBA
+    mov dx, 0x1F3
+    out dx, al
+                                            ; Finished sending more bits of the LBA
+                                            ; Send more bits of the LBA
+    mov dx, 0x1F4
+    mov eax, ebx                            ; Restore the backup LBA
+    shr eax, 8
+    out dx, al
+                                            ; Finished sending more bits of the LBA
+                                            ; Send upper 16 bits of the LBA
+    mov dx, 0x1F5
+    mov eax, ebx                            ; Restore the backup LBA
+    shr eax, 16
+    out dx, al
+                                            ; Finished sending upper 16 bits of the LBA
+    mov dx, 0x1f7
+    mov al, 0x20
+    out dx, al
+                                            ; Read all sectors into memory
+.next_sector:
+    push ecx
+                                            ; Checking if we need to read
+.try_again:
+    mov dx, 0x1f7
+    in al, dx
+    test al, 8
+    jz .try_again
 
-disk_load:
-    pusha
-    push dx
-    mov ah, 0x02                ; ah <- int 0x13 function. 0x02 = 'read'
-    mov al, dh                  ; al <- number of sectors to read (0x01 .. 0x80)
-    mov cl, 0x02                ; cl <- sector (0x01 .. 0x11)
-                                ; 0x01 is our boot sector, 0x02 is the first 'available' sector
-    mov ch, 0x00                ; ch <- cylinder (0x0 .. 0x3FF, upper 2 bits in 'cl')
-                                ; dl <- drive number. Our caller sets it as a parameter and gets it from BIOS
-                                ; (0 = floppy, 1 = floppy2, 0x80 = hdd, 0x81 = hdd2)
-    mov dh, 0x00                ; dh <- head number (0x0 .. 0xF)
-                                ; [es:bx] <- pointer to buffer where the data will be stored
-                                ; caller sets it up for us, and it is actually the standard location for int 13h
-    int 0x13                    ; BIOS interrupt
-    jc disk_error               ; if error (stored in the carry bit)
-    pop dx
-    cmp al, dh                  ; BIOS also sets 'al' to the # of sectors read. Compare it.
-    jne sectors_error
-    popa
+                                            ; We need to read 256 words at a time
+    mov ecx, 256
+    mov dx, 0x1F0
+    rep insw
+    pop ecx
+    loop .next_sector
+                                            ; End of reading sectors into memory
     ret
-
-disk_error:
-    mov bx, DISK_ERROR
-    call print
-    call print_newline
-    mov dh, ah                  ; ah = error code, dl = disk drive that dropped the error
-    jmp disk_loop
-
-sectors_error:
-    mov bx, SECTORS_ERROR
-    call print
-
-disk_loop:
-    jmp $
-
-DISK_ERROR:
-    db "Disk read error", 0
-
-SECTORS_ERROR:
-    db "Incorrect number of sectors read", 0
