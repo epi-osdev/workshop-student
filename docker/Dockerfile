@@ -8,7 +8,8 @@ RUN apt-get install -y make \
     unzip \
     nasm \
     lbzip2 \
-    grub-common
+    grub-common \
+    qemu
 
 # Re-used environment variables
 ENV DIR="/osdev"
@@ -37,6 +38,14 @@ ENTRYPOINT ["/bin/bash"]
 # Usage example:
 #
 # docker build -t osdev .
-# docker run -it -v $PWD:/osdev osdev
+#
+# docker run -it -e DISPLAY=$DISPLAY \
+# -v /tmp/.X11-unix:/tmp/.X11-unix \
+# -v $PWD:/osdev osdev
 #
 # In this case $PWD point to the project root folder
+#
+# xhost manages X server control, it filters the authorized clients
+#     perms:   family:user 
+# xhost +si:localuser:root
+# ^ allow a single loacl user root
