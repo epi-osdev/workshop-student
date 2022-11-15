@@ -1,39 +1,121 @@
-[org 0x7c00]                ; boot sector offset because BIOS put boot_sector at this adress
-                            ; it will put this offset for all code
+ORG 0x7c00
+BITS 16
 
-mov [BOOT_DRIVE], dl        ; Remember that the BIOS sets us the boot drive in 'dl' on boot
-mov bp, 0x9000              ; set the stack far from boot sector avoding overlapping
-mov sp, bp
+CODE_SEG equ gdt_code - gdt_start
+DATA_SEG equ gdt_data - gdt_start
 
-mov bx, WELCOME_MESSAGE
-call print
-call print_newline
+jmp short start                             ; 'short' means intramodule jump, it cannot jump to another module / segment
+nop                                         ; nop=No Operation, I don't know why it's here, nee
+                                            ; Start of Curious data that I don't know what it is
+start:
+    jmp 0:step2
 
-call load_kernel            ; read the kernel from disk
-call switch_to_pm           ; switching from real mode to protected mode
+step2:
+    cli                                     ; Clear Interrupts
+    mov ax, 0x00
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
+    mov sp, 0x7c00
+    sti                                     ; Enables Interrupts
 
-%include "src/boot_sector/print.asm"
-%include "src/boot_sector/disk.asm"
-%include "src/boot_sector/switch_pm.asm"
+.load_protected:
+    cli
+    lgdt[gdt_descriptor]
+    mov eax, cr0
+    or eax, 0x1
+    mov cr0, eax
+    jmp CODE_SEG:load32
+    
+                                            ; GDT
+gdt_start:
 
-[bits 16]
-load_kernel:
-    mov bx, KERNEL_OFFSET   ; Read from disk and store in 0x1000
-    mov dh, 31              ; 1 sector = 512 bytes, PAY attention to kernel size
-    mov dl, [BOOT_DRIVE]
-    call disk_load
+gdt_null:
+    dd 0x0
+    dd 0x0
+                                            ; offset 0x8
+gdt_code:                                   ; CS SHOULD POINT TO THIS
+    dw 0xffff                               ; Segment limit first 0-15 bits
+    dw 0                                    ; Base first 0-15 bits
+    db 0                                    ; Base 16-23 bits
+    db 0x9a                                 ; Access byte
+    db 11001111b                            ; High 4 bit flags and the low 4 bit flags
+    db 0                                    ; Base 24-31 bits
+
+                                            ; offset 0x10
+gdt_data:                                   ; DS, SS, ES, FS, GS
+    dw 0xffff                               ; Segment limit first 0-15 bits
+    dw 0                                    ; Base first 0-15 bits
+    db 0                                    ; Base 16-23 bits
+    db 0x92                                 ; Access byte
+    db 11001111b                            ; High 4 bit flags and the low 4 bit flags
+    db 0                                    ; Base 24-31 bits
+
+gdt_end:
+
+gdt_descriptor:
+    dw gdt_end - gdt_start-1
+    dd gdt_start
+ 
+[BITS 32]
+load32:
+    mov eax, 1
+    mov ecx, 100
+    mov edi, 0x0100000
+    call ata_lba_read
+    jmp CODE_SEG:0x0100000
+
+ata_lba_read:
+    mov ebx, eax,                           ; Backup the LBA
+                                            ; Send the highest 8 bits of the lba to hard disk controller
+    shr eax, 24
+    or eax, 0xE0                            ; Select the  master drive
+    mov dx, 0x1F6
+    out dx, al
+                                            ; Finished sending the highest 8 bits of the lba
+                                            ; Send the total sectors to read
+    mov eax, ecx
+    mov dx, 0x1F2
+    out dx, al
+                                            ; Finished sending the total sectors to read
+                                            ; Send more bits of the LBA
+    mov eax, ebx                            ; Restore the backup LBA
+    mov dx, 0x1F3
+    out dx, al
+                                            ; Finished sending more bits of the LBA
+                                            ; Send more bits of the LBA
+    mov dx, 0x1F4
+    mov eax, ebx                            ; Restore the backup LBA
+    shr eax, 8
+    out dx, al
+                                            ; Finished sending more bits of the LBA
+                                            ; Send upper 16 bits of the LBA
+    mov dx, 0x1F5
+    mov eax, ebx                            ; Restore the backup LBA
+    shr eax, 16
+    out dx, al
+                                            ; Finished sending upper 16 bits of the LBA
+    mov dx, 0x1f7
+    mov al, 0x20
+    out dx, al
+                                            ; Read all sectors into memory
+.next_sector:
+    push ecx
+                                            ; Checking if we need to read
+.try_again:
+    mov dx, 0x1f7
+    in al, dx
+    test al, 8
+    jz .try_again
+
+                                            ; We need to read 256 words at a time
+    mov ecx, 256
+    mov dx, 0x1F0
+    rep insw
+    pop ecx
+    loop .next_sector
+                                            ; End of reading sectors into memory
     ret
 
-[bits 32]
-entry_point:
-    call KERNEL_OFFSET      ; Give control to the kernel
-    jmp $                   ; infinite loop until kernel give control back
-
-BOOT_DRIVE db 0             ; It is a good idea to store it in memory because 'dl' may get overwritten
-KERNEL_OFFSET equ 0x1000    ; The same one we used when linking the kernel in the Makefile
-
-WELCOME_MESSAGE:
-    db "Welcome to JackOS !", 0
-
-times 510 - ($-$$) db 0     ; fill memory with zeros until we rich 510
-dw 0xaa55                   ; magic number, BIOS needs it to know that's an os
+times 510-($ - $$) db 0
+dw 0xAA55

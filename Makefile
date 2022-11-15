@@ -1,52 +1,86 @@
+SRC				= ./src
+CONFIG			= ./config
+BIN				= ./bin
+ISO				= ./iso
+
+ENTRY			= $(SRC)/entry
+BOOT			= $(SRC)/boot_sector
+LINKER			= $(CONFIG)/linker.ld
+KERNEL_BIN		= $(BIN)/kernel.bin
+KERNEL_BUILD	= $(BIN)/kernelfull.o
+OS_BIN			= $(ISO)/epi-os.iso
+
+# Compilation tools (compiler, linker, etc..)
 NASM			= nasm
 CC				= i686-elf-gcc
 LD				= i686-elf-ld
-LD_FLAGS		= -Ttext 0x1000 --oformat binary
-QEMU			= qemu-system-x86_64
 
-SRC				= ./src
-BIN				= ./bin
-ISO				= ./iso
-BOOT_SECTOR		= $(SRC)/boot_sector
-IMAGE_NAME		= $(ISO)/epi-os.iso
+# Boot sector
+BOOT_SRC		= $(BOOT)/boot_sector.asm
+BOOT_BIN		= $(BIN)/boot.bin
+BOOT_FLAGS		= -f bin
 
-BOOT_SRC		= $(BOOT_SECTOR)/boot_sector.asm
-BOOT_BIN		= $(BIN)/boot_sector.bin
-BOOT_FLAGS		= -f bin -o $(BOOT_BIN)
+# Includes
+INCLUDES		= -I $(SRC)
 
-C_SRC			= $(SRC)/entry/kernel_entry.c
-C_OBJ			= $(C_SRC:.c=.o)
-
-ASM_SRC			= $(SRC)/entry/entry_point.asm
-ASM_OBJ			= $(ASM_SRC:.asm=.o)
+# Flags
 ASM_FLAGS		= -f elf -g
-KERNEL_FILES	= $(ASM_OBJ) \
-				$(C_OBJ)
-KERNEL_BIN		= $(BIN)/kernel.bin
+CFLAGS			= -g -ffreestanding -falign-jumps -falign-functions \
+				  -falign-labels -falign-loops -fstrength-reduce \
+				  -fomit-frame-pointer -finline-functions -Wno-unused-function \
+				  -fno-builtin -Werror -Wno-unused-label -Wno-cpp \
+				  -Wno-unused-parameter -nostdlib -nostartfiles \
+				  -nodefaultlibs -Wall -O0 $(INCLUDES)
+LDFLAGS			= -g -relocatable
 
-all: boot_bin kernel_bin
-	dd if=$(BOOT_BIN) 					>> $(IMAGE_NAME)
-	dd if=$(KERNEL_BIN) 				>> $(IMAGE_NAME)
-	dd if=/dev/zero bs=1048576 count=16 >> $(IMAGE_NAME)
+# Sources
+ASM_SRC			= $(ENTRY)/entry_point.asm
+C_SRC			= $(ENTRY)/kernel_entry.c
 
+# Objects
+C_OBJ			= $(C_SRC:.c=.o)
+ASM_OBJ			= $(ASM_SRC:.asm=.o)
+KERNEL_OBJS		= $(ASM_OBJ) $(C_OBJ)
+
+
+# Targets
+all: build
+
+build: boot_bin kernel_bin
+	dd if=$(BOOT_BIN) 					>> $(OS_BIN)
+	dd if=$(KERNEL_BIN) 				>> $(OS_BIN)
+	dd if=/dev/zero bs=1048576 count=16 >> $(OS_BIN)
+
+# Compile and launch QEMU
 run:
-	$(QEMU) -fda $(IMAGE_NAME)
+	qemu-system-x86_64 $(OS_BIN)
 
-kernel_bin: $(KERNEL_FILES)
-	$(LD) $(LD_FLAGS) $(KERNEL_FILES) -o $(KERNEL_BIN)
+build_and_run: build run
 
 boot_bin:
-	$(NASM) $(BOOT_FLAGS) $(BOOT_SRC)
+	$(NASM) $(BOOT_FLAGS) $(BOOT_SRC) -o $(BOOT_BIN)
+
+kernel_bin: $(KERNEL_OBJS)
+	$(LD) $(LDFLAGS) $(KERNEL_OBJS) -o $(KERNEL_BUILD)
+	$(CC) $(CFLAGS) -T $(LINKER) -o $(KERNEL_BIN) -ffreestanding -O0 -nostdlib $(KERNEL_BUILD)
 
 clean:
-	$(RM) $(BIN)/*
-	$(RM) $(KERNEL_FILES)
+	$(RM) $(C_OBJ)
+	$(RM) $(ASM_OBJ)
+	$(RM) $(KERNEL_BIN)
+	$(RM) $(BOOT_BIN)
+	$(RM) $(KERNEL_BUILD)
 
-re: clean all
+fclean: clean
+	$(RM) $(OS_BIN)
 
+re: fclean all
+
+# Compilations rules
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -std=gnu99 -c $< -o $@
 
 %.o: %.asm
 	$(NASM) $(ASM_FLAGS) $< -o $@
-	
+
+.PHONY: build run build_and_run boot_bin kernel_bin clean fclean
