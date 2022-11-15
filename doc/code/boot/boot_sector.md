@@ -36,6 +36,10 @@ Here is a list of the quality and limitations of the real mode:
 
 ### Protected mode (32 bits) <a name="protected-mode"></a>
 
-the protected mode is
+the protected mode is the second mode that we have access when booting the processor. It's a 32 bits mode that have a lot of limitations. The main limitation is that the processor can only access 4GB of memory (because the max amount of addresses is 4,294,967,296 bytes (2<sup>32</sup>) that represents 4GB. But with some tricky things you can upgrade to less that 4GB of memory. \
+It's a bit old now but it was for a long time the main mode of the processor. It's still used in some cases like windows 32 bits. The main advantage of the protected mode is that it's a lot more secure than the real mode. It's also a lot more powerful than the real mode. It's also a lot more easy to use than the real mode. But the main cons of the protected mode is that you cannot access to the BIOS interrupts and it's more complex to use but it's not a big deal.
 
 ### Long mode (64 bits) <a name="long-mode"></a>
+
+the long mode is the third mode that we have access when booting the processor. It's a 64 bits mode that have a lot of limitations. The main limitation is that the processor can only access 256TB of memory (because the max amount of addresses is 256, terabytes (2<sup>48</sup>) that represents 256TB. But with some tricky things you can upgrade to less that 256TB of memory. \
+Don't be affraid of this because you will not have to use this for now :)
