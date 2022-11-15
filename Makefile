@@ -4,10 +4,11 @@ LD				= i686-elf-ld
 LD_FLAGS		= -Ttext 0x1000 --oformat binary
 QEMU			= qemu-system-x86_64
 
-IMAGE_NAME		= epi-os.iso
 SRC				= ./src
 BIN				= ./bin
+ISO				= ./iso
 BOOT_SECTOR		= $(SRC)/boot_sector
+IMAGE_NAME		= $(ISO)/epi-os.iso
 
 BOOT_SRC		= $(BOOT_SECTOR)/boot_sector.asm
 BOOT_BIN		= $(BIN)/boot_sector.bin
