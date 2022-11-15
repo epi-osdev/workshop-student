@@ -33,3 +33,10 @@ USER theo
 ENV PATH="${PATH}:${I686OUT}/bin"
 
 ENTRYPOINT ["/bin/bash"]
+
+# Usage example:
+#
+# docker build -t osdev .
+# docker run -it -v $PWD:/osdev osdev
+#
+# In this case $PWD point to the project root folder
