@@ -2,7 +2,7 @@
 
 ## Cross Compiler
 
-To compile the OS for the CPU, we need a cross compiler, a cross linker, etc.. It allows us to compile for another target than the OS.
+To compile the OS for the CPU, we need a cross compiler, a cross linker, etc.. It allows us to compile for another target than your current OS.
 
 We have made a Docker image, to build and run it, run the next instructions:
 
