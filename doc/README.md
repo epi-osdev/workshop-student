@@ -12,3 +12,4 @@ Here you can find the documentation of the project. this documentation explain y
 
 - [Usage](usage.md)
 
+- [Code](code.md)
