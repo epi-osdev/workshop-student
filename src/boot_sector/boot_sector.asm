@@ -2,13 +2,11 @@
 [bits 16]
 
 start:
-    cli                                     ; Clear Interrupts
     mov ax, 0x00
     mov ds, ax
     mov es, ax
     mov ss, ax
     mov sp, 0x7c00
-    sti                                     ; Enables Interrupts
 
 .load_protected:
     cli

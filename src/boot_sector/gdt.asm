@@ -1,3 +1,5 @@
+; Offset for the segment descriptor
+; It doesnt point on the segment itself
 CODE_SEG equ gdt_code - gdt_start
 DATA_SEG equ gdt_data - gdt_start
 
