@@ -1,0 +1,6 @@
+bin/*
+!bin/.gitkeep
+iso/*
+!iso/.gitkeep
+*.o
+*.bin
