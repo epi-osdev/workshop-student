@@ -68,29 +68,54 @@ start:
     mov ds, ax
     mov es, ax
     mov ss, ax
-    mov sp, 0x7c00
+    mov bp, 0x7c00
+    mov sp, bp
 ```
 
 This label is initializing every segment register to 0 (if you don't know what a segment register is, please see the [**Doc**](../memory/segmentation.md)) \
 The `mov ax, 0x00` is moving the value `0x00` in the register `ax`. It's usefull for initializing the registers ds, es and ss to a default value
 
-sp register is the stack pointer, it's storing the address of the top of the stack. We are setting it to `0x7c00` because by definition the stack is growing downwards. The stack base address has been changed (to 0x7C00) to avoid an overwrite over the memory (segments, etc..).
+`bp` and `sp` are the stack register, (sp = stack pointer, bp = base pointer). The stack is the local memory of your program, it's where all the local variables are stored. By definition the stack is growing downward (from high address to low address). The base pointer is the beginning of the stack and the stack pointer is the current position of the stack. We are setting both to `0x7c00` because we are beginning all the kernel code at this address so when the stack is growing it will not overlapping the kernel code.
 
-Actually we are in real mode, we want to switch to protected mode. the .load_protection_mode label is doing this.
+After the start label that will init all the usefull register we need to load the disk and switch to the protected mode. To do this we have a label in 16bits mode that manage all of this.
 
 ```nasm
-.load_protected:
-    cli
-    lgdt[gdt_descriptor]
-    mov eax, cr0
-    or eax, 0x1
-    mov cr0, eax
-    jmp CODE_SEG:load32
+[bits 16]
+run_16:
+    mov [BOOT_DRIVE], dl
+    call load_kernel
+    call switch_to_pm
 ```
-You have to know that to change from real mode to protected mode, you have to do a precise routine and you need to setup many informations. So the first step is to clear the interrupts (see the [DOC](../interrupts/interrupts.md) for more informations). In assembly, the `cli` instruction is doing this. \
-Then we are loading the gdt (Global Descriptor Table) with the `lgdt` instruction, gdt is a terrible but mandatory thing to setup so you have the documnentation of these shit [HERE](gdt.md). \
-Then we are setting the cr0 register (Control Register 0) to 1. This is the register that is telling the processor that we are in protected mode. \
-Finally we are jumping to the `load32` label in the CODE_SEG segment. \
+So as you can see it's a 16 bits label that load our kernel and switch to the protected mode. The hardest line in this label is the `mov [BOOT_DRIVE], dl`. When you are launching the kernel, BIOS store the id of the boot drive in the register `dl`. So we are moving the value of `dl` in the address `BOOT_DRIVE` to save the data.
+The two other lines are just calling the two functions that we will see later.
+
+The first function that will be called in our `run_16` label is the `load_kernel` function. This function is loading the entire kernel in the memory it's a 16 bits label that read the disk and store the content into the memory. Here is the actual code of the function:
+
+```nasm
+[bits 16]
+load_kernel:
+    mov bx, KERNEL_OFFSET
+    mov dh, 31
+    mov dl, [BOOT_DRIVE]
+    call disk_load
+    ret
+```
+If you want to see what's doing the `disk_load` function, you can see it in the [disk.md](disk.md) file. this function ask to set some registers before using it:
+- `bx`: it's the offset in the memory where the kernel will be loaded
+- `dh`: it's the number of sectors that will be loaded
+- `dl`: it's the id of the disk that will be loaded
+once the function is called, it will load `dh` sector from the disk `dl` and store the result into the memory at the offset `bx`.
+
+Once the kernel is loaded in memory, we have to switch to the protected mode. To do this we have to call the `switch_to_pm` function. This function is doing all the routine that we need to switch from RM to PM, if you want to see what is doing exactly this function you can see it in the [switch_pm.md](switch_pm.md) file.
+
+When all is done we are in protected mode (finally), so we want to jump to the C kernel code. to do this we have a label called `entry_point`.
+
+```nasm
+entry_point:
+    call KERNEL_OFFSET
+    jmp $
+```
+Previously, we have loaded the kernel in the memory at the offset `KERNEL_OFFSET`. So we are calling the function at this offset. The `jmp $` is just a infinite loop.
 
 The end of the file is for loading all the other files and writting the magic bytes at the end of the file.
 
@@ -104,5 +129,6 @@ dw 0xAA55
 %include instruction is obviously for including the other files.
 - [gdt.asm](gdt.md)
 - [disk.asm](disk.md)
+- [switch_pm.asm](switch_to_pm.md)
 
 the `times 510-($ - $$) db 0` is writing 510 - (current address - start address) bytes of 0. It's just padding the file with 0 to have a size of 510 bytes. The last two bytes are the magic bytes `0xAA55` that are telling the bios that the file is bootable (necessary for the [BIOS routine](#bios-routine)).
