@@ -5,7 +5,7 @@
 ;   DH = number of sectors
 
 disk_load:
-    push dxgi
+    push dx
     mov ah, 0x02
     mov al, dh
     mov ch, 0x00
