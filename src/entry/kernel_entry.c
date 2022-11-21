@@ -4,5 +4,4 @@ void kernel_main()
     *video_memory = 'X';
     video_memory++;
     *video_memory = 0xf0;
-    for (;;);
 }
