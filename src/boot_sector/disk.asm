@@ -1,51 +1,21 @@
-ata_lba_read:
-    mov ebx, eax,                           ; Backup the LBA
-                                            ; Send the highest 8 bits of the lba to hard disk controller
-    shr eax, 24
-    or eax, 0xE0                            ; Select the  master drive
-    mov dx, 0x1F6
-    out dx, al
-                                            ; Finished sending the highest 8 bits of the lba
-                                            ; Send the total sectors to read
-    mov eax, ecx
-    mov dx, 0x1F2
-    out dx, al
-                                            ; Finished sending the total sectors to read
-                                            ; Send more bits of the LBA
-    mov eax, ebx                            ; Restore the backup LBA
-    mov dx, 0x1F3
-    out dx, al
-                                            ; Finished sending more bits of the LBA
-                                            ; Send more bits of the LBA
-    mov dx, 0x1F4
-    mov eax, ebx                            ; Restore the backup LBA
-    shr eax, 8
-    out dx, al
-                                            ; Finished sending more bits of the LBA
-                                            ; Send upper 16 bits of the LBA
-    mov dx, 0x1F5
-    mov eax, ebx                            ; Restore the backup LBA
-    shr eax, 16
-    out dx, al
-                                            ; Finished sending upper 16 bits of the LBA
-    mov dx, 0x1f7
-    mov al, 0x20
-    out dx, al
-                                            ; Read all sectors into memory
-.next_sector:
-    push ecx
-                                            ; Checking if we need to read
-.try_again:
-    mov dx, 0x1f7
-    in al, dx
-    test al, 8
-    jz .try_again
+; load DH sectors to ES:BX from drive DL
 
-                                            ; We need to read 256 words at a time
-    mov ecx, 256
-    mov dx, 0x1F0
-    rep insw
-    pop ecx
-    loop .next_sector
-                                            ; End of reading sectors into memory
+disk_load:
+    push dx                 ; Store DX on stack so later we can recall
+                            ; how many sectors were request to be read,
+                            ; even if it is altered in the meantime
+    mov ah, 0x02            ; BIOS read sector function
+    mov al, dh              ; Read DH sectors
+    mov ch, 0x00            ; Select cylinder 0
+    mov dh, 0x00            ; Select head 0
+    mov cl, 0x02            ; Start reading from second sector ( i.e.
+                            ; after the boot sector )
+    int 0x13                ; BIOS interrupt
+    jc disk_error           ; Jump if error ( i.e. carry flag set )
+    pop dx                  ; Restore DX from the stack
+    cmp dh, al              ; if AL ( sectors read ) != DH ( sectors expected )
+    jne disk_error          ; display error message
     ret
+
+disk_error:
+    jmp $
