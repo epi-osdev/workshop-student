@@ -7,12 +7,12 @@ This file manage all the hard disk related stuff.
 
 - [Introduction](#introduction)
   - [Table of content](#table-of-content)
-  - [Disk structure ](#disk-structure-)
+  - [Disk structure](#disk-structure)
       - [Head](#head)
       - [Cylinder](#cylinder)
       - [Sector](#sector)
-  - [Disk routines ](#disk-routines-)
-  - [Code explaination ](#code-explaination-)
+  - [Disk routines](#disk-routines)
+  - [Code explaination](#code-explaination)
 
 ## Disk structure <a name="disk-structure"></a>
 
