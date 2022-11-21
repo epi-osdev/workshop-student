@@ -4,7 +4,7 @@
 
 this is the documentation of all the booting things, it's splitted into differents parts that explain all the differents parts of the booting process. You have several parts:
 
-## Index
+## Table of content
 
 - [Boot sector](boot_sector.md)
 - [Kernel entry](kernel_entry.md)
