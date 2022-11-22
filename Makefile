@@ -4,6 +4,7 @@ BIN				= ./bin
 ISO				= ./iso
 
 ENTRY			= $(SRC)/entry
+UTILS			= $(SRC)/utils
 BOOT			= $(SRC)/boot_sector
 LINKER			= $(CONFIG)/linker.ld
 KERNEL_BIN		= $(BIN)/kernel.bin
@@ -21,7 +22,7 @@ BOOT_BIN		= $(BIN)/boot.bin
 BOOT_FLAGS		= -f bin
 
 # Includes
-INCLUDES		= -I $(SRC)
+INCLUDES		= -I $(SRC) -I $(UTILS)
 
 # Flags
 ASM_FLAGS		= -f elf -g
@@ -35,7 +36,11 @@ LDFLAGS			= -g -relocatable
 
 # Sources
 ASM_SRC			= $(ENTRY)/entry_point.asm
-C_SRC			= $(ENTRY)/kernel_entry.c
+C_SRC			= $(ENTRY)/kernel_entry.c \
+				$(UTILS)/VGA/clear.c \
+				$(UTILS)/VGA/print.c \
+				$(UTILS)/string/revstr.c \
+				$(UTILS)/string/itoa.c \
 
 # Objects
 C_OBJ			= $(C_SRC:.c=.o)
