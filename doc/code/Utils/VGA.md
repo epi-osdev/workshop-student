@@ -40,7 +40,6 @@ It's the basic function to display a character on the screen.
 It will return 0 if the character is displayed and will return a negative value in case of error.
 Errors:
 - -1: The position is out of the screen (x > 80 or y > 25)
-- -2: The color is not valid (color > 15)
 Here is the prototype of the function:
 
 ```c
@@ -54,7 +53,6 @@ It's a basic function that display a string on the screen.
 It will return 0 if the string is displayed and will return a negative value in case of error.
 Errors:
 - -1: The position is out of the screen (x > 80 or y > 25)
-- -2: The color is not valid (color > 15)
 Here is the prototype of the function:
 
 ```c

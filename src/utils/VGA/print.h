@@ -21,7 +21,7 @@ int vga_putchar_at(char c, uint8_t color, uint8_t x, uint8_t y);
 * @param color: the color to print the string with
 * @param x: the x position to print the string at
 * @param y: the y position to print the string at
-* @return 0 if success
+* @return length of the string printed if success
 * @return -1 if position error
 * @return -2 if invalid color
 */
