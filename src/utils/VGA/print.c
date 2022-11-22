@@ -74,6 +74,8 @@ int vga_print_int_at(int num, uint8_t color, uint8_t x, uint8_t y)
 {
     char str[16] = {0};
 
+    if (x >= VGA_WIDTH || y >= VGA_HEIGHT)
+        return -1;
     itoa(num, str, 10);
     return vga_putstr_at(str, color, x, y);
 }
