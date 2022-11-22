@@ -11,7 +11,6 @@
 * @param y: the y position to print the char at
 * @return 0 if success
 * @return -1 if position error
-* @return -2 if invalid color
 */
 int vga_putchar_at(char c, uint8_t color, uint8_t x, uint8_t y);
 
@@ -23,8 +22,18 @@ int vga_putchar_at(char c, uint8_t color, uint8_t x, uint8_t y);
 * @param y: the y position to print the string at
 * @return length of the string printed if success
 * @return -1 if position error
-* @return -2 if invalid color
 */
 int vga_putstr_at(const char *str, uint8_t color, uint8_t x, uint8_t y);
+
+/**
+* @brief Prints a number to the VGA buffer with the given colors at the given position
+* @param num: the number to print
+* @param color: the color to print the number with
+* @param x: the x position to print the number at
+* @param y: the y position to print the number at
+* @return length of the number printed if success
+* @return -1 if position error
+*/
+int vga_print_int_at(int num, uint8_t color, uint8_t x, uint8_t y);
 
 #endif
