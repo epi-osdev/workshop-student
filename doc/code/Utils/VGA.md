@@ -22,6 +22,7 @@ The VGA folder provides an API that can be included to use all the functions. On
 
 - [vga_clear_screen](#func-vga-clear-screen)
 - [vga_putchar_at](#func-vga-putchar-at)
+- [vga_putstr_at](#func-vga-putstr-at)
 
 ## vga_clear_screen <a name="func-vga-clear-screen"></a>
 
@@ -44,6 +45,20 @@ Here is the prototype of the function:
 
 ```c
 int vga_putchar_at(char c, uint8_t color, uint8_t x, uint8_t y);
+```
+
+## vga_putstr_at <a name="func-vga-putstr-at"></a>
+
+This function display a string at the given position with the given color.
+It's a basic function that display a string on the screen.
+It will return 0 if the string is displayed and will return a negative value in case of error.
+Errors:
+- -1: The position is out of the screen (x > 80 or y > 25)
+- -2: The color is not valid (color > 15)
+Here is the prototype of the function:
+
+```c
+int vga_putstr_at(const char *str, uint8_t color, uint8_t x, uint8_t y);
 ```
 
 # Want to contribute ? <a name="want-to-contribute"></a>
