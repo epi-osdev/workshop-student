@@ -9,7 +9,7 @@
 * @param color: the color to print the char with
 * @param x: the x position to print the char at
 * @param y: the y position to print the char at
-* @return 0 if success
+* @return 1 if success
 * @return -1 if position error
 */
 int vga_putchar_at(char c, uint8_t color, uint8_t x, uint8_t y);
