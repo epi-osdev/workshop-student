@@ -39,7 +39,7 @@ void vga_clear_screen();
 
 This function display a character at the given position with the given color.
 It's the basic function to display a character on the screen.
-It will return 0 if the character is displayed and will return a negative value in case of error.
+It will return 1 if the character is displayed and will return a negative value in case of error.
 Errors:
 - -1: The position is out of the screen (x > 80 or y > 25)
 Here is the prototype of the function:
