@@ -46,7 +46,7 @@ You probably now how this type of jump works but there is an important feature t
 Now we are entering the first PM label. like said previously (#routine-explaination) we need to clear all the old segment because it's useless so we are setting all the segment registers (ds, ss, es, fs, gs) to the data segment. So when using theses, it will refer to the data segment.
 
 Finally, we are updating the stack pointer, before, the stack pointer was in 16 bits mode, now we are in 32 bits mode so we have more space, more memory adress, and new registers to the stack pointer. So we need to update the stack pointers to the new 32 bits mode.
-
+    
 ## Code explaination <a name="code-explaination"></a>
 
 we have two different labels in this file, one for RM and the other one for PM. Here is the first one
