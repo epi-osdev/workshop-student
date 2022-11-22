@@ -36,4 +36,16 @@ int vga_putstr_at(const char *str, uint8_t color, uint8_t x, uint8_t y);
 */
 int vga_print_int_at(int num, uint8_t color, uint8_t x, uint8_t y);
 
+/**
+* @brief Prints a formatted string to the VGA buffer with the given colors at the given position
+* @param fmt: the formatted string to print
+* @param color: the color to print the formatted string with
+* @param x: the x position to print the formatted string at
+* @param y: the y position to print the formatted string at
+* @param ...: the arguments to the formatted string
+* @return length of the formatted string printed if success
+* @return -1 if position error
+*/
+int vga_printf_at(const char *format, uint8_t color, uint8_t x, uint8_t y, ...);
+
 #endif

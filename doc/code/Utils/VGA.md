@@ -24,6 +24,7 @@ The VGA folder provides an API that can be included to use all the functions. On
 - [vga_putchar_at](#func-vga-putchar-at)
 - [vga_putstr_at](#func-vga-putstr-at)
 - [vga_print_int_at](#func-vga-print-int-at)
+- [vga_printf_at](#func-vga-printf-at)
 
 ## vga_clear_screen <a name="func-vga-clear-screen"></a>
 
@@ -71,6 +72,19 @@ Here is the prototype of the function:
 
 ```c
 int vga_print_int_at(int num, uint8_t color, uint8_t x, uint8_t y);
+```
+
+## vga_printf_at <a name="func-vga-printf-at"></a>
+
+This function display a formatted string at the given position with the given color.
+It's a basic function that display a formatted string on the screen.
+It will return the string length if the string is displayed and will return a negative value in case of error.
+Errors:
+- -1: The position is out of the screen (x > 80 or y > 25)
+Here is the prototype of the function:
+
+```c
+int vga_printf_at(const char *format, uint8_t color, uint8_t x, uint8_t y, ...);
 ```
 
 # Want to contribute ? <a name="want-to-contribute"></a>
