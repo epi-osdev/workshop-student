@@ -21,6 +21,7 @@ The VGA folder provides an API that can be included to use all the functions. On
 # Functions list <a name="functions-list"></a>
 
 - [vga_clear_screen](#func-vga-clear-screen)
+- [vga_putchar_at](#func-vga-putchar-at)
 
 ## vga_clear_screen <a name="func-vga-clear-screen"></a>
 
@@ -29,6 +30,20 @@ Here is the prototype of the function:
 
 ```c
 void vga_clear_screen();
+```
+
+## vga_putchar_at <a name="func-vga-putchar-at"></a>
+
+This function display a character at the given position with the given color.
+It's the basic function to display a character on the screen.
+It will return 0 if the character is displayed and will return a negative value in case of error.
+Errors:
+- -1: The position is out of the screen (x > 80 or y > 25)
+- -2: The color is not valid (color > 15)
+Here is the prototype of the function:
+
+```c
+int vga_putchar_at(char c, uint8_t color, uint8_t x, uint8_t y);
 ```
 
 # Want to contribute ? <a name="want-to-contribute"></a>
