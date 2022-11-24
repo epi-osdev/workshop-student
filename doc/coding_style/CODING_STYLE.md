@@ -30,6 +30,6 @@ This is the list of all the rules that you have to follow to write a good code.
 - [Functions](functions.md): You must use the `static` keyword for functions that are not used outside of the file.
 - [Global variables](global_variables.md): You must not use global variables, if you need to use a global variable, you must add a comment to explain why you need it.
 - [Includes](includes.md): You must not include a header file in another header file, you must include the header file in the source file. Excepts when it's necessarry.
-- [Guards](guards.md): You must use guards for all the header files and not `#pragma once`.
+- [Guards](guards.md): You must use guards for all the header files and not `#pragma once`. You must also use a naming convention for the guards to avoid conflicts. The convention in this project is `__EOS_PATH_TO_FILE_H__`. You can ommit the `src` folder
 - [SRP](srp.md): You must follow the Single Responsibility Principle. A function must do only one thing, same for a file or a folder, it must contains only one subject.
 - [DRY](dry.md): You must follow the Don't Repeat Yourself principle. If you need to repeat the same code, you must create a function or a macro to avoid the repetition.
