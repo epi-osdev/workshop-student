@@ -56,4 +56,3 @@ size_t strlen(const char *str);
 # Want to contribute ? <a name="want-to-contribute"></a>
 
 If you want to contribute to this utils, you can add your own function, please make sure that the code is clean and that it's working. If you want to add a function, please add it in the [string.h](../../../src/utils/string.h) file and add the documentation in the [string.md](string.md) file.
-bb
