@@ -21,6 +21,7 @@ The string utils is a library that contains all the functions to manipulate stri
 
 - [itoa](#func-itoa)
 - [revstr](#func-revstr)
+- [strlen](#func-strlen)
 
 ## itoa <a name="func-itoa"></a>
 
@@ -42,6 +43,17 @@ Here is the prototype of the function:
 void revstr(char *str);
 ```
 
+## strlen <a name="func-strlen"></a>
+
+This function return the length of the string given in parameter.
+
+Here is the prototype of the function:
+
+```c
+size_t strlen(const char *str);
+```
+
 # Want to contribute ? <a name="want-to-contribute"></a>
 
 If you want to contribute to this utils, you can add your own function, please make sure that the code is clean and that it's working. If you want to add a function, please add it in the [string.h](../../../src/utils/string.h) file and add the documentation in the [string.md](string.md) file.
+bb
