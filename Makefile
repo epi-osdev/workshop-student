@@ -41,6 +41,7 @@ C_SRC			= $(ENTRY)/kernel_entry.c \
 				$(UTILS)/VGA/print.c \
 				$(UTILS)/string/revstr.c \
 				$(UTILS)/string/itoa.c \
+				$(UTILS)/string/strlen.c \
 
 # Objects
 C_OBJ			= $(C_SRC:.c=.o)
