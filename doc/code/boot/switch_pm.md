@@ -41,7 +41,7 @@ Next, we are making a far jump to the first 32 bits label in the code segment, i
 ```nasm
 jmp CODE_SEG:init_pm
 ```
-You probably now how this type of jump works but there is an important feature to know. The far jump clear the CPU pipeline, the CPU pipeline in modern CPU is used to run tasks in a parallel way. It's very usefull but for us when we are changing the mode some tasks can crash because of the differents mode (like 16 bits segmentation, interrupts, etc..). To avoid theses crashes we need to clear the CPU pipeline, it's done by the far jump.
+You probably now how this type of jump works but there is an important feature to know. The far jump clear the CPU pipeline, the CPU pipeline in modern CPU is used to run tasks in a parallel way. It's very useful but for us when we are changing the mode some tasks can crash because of the differents mode (like 16 bits segmentation, interrupts, etc..). To avoid theses crashes we need to clear the CPU pipeline, it's done by the far jump.
 
 Now we are entering the first PM label. like said previously (#routine-explaination) we need to clear all the old segment because it's useless so we are setting all the segment registers (ds, ss, es, fs, gs) to the data segment. So when using theses, it will refer to the data segment.
 

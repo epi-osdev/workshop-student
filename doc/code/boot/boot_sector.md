@@ -73,11 +73,11 @@ start:
 ```
 
 This label is initializing every segment register to 0 (if you don't know what a segment register is, please see the [**Doc**](../memory/segmentation.md)) \
-The `mov ax, 0x00` is moving the value `0x00` in the register `ax`. It's usefull for initializing the registers ds, es and ss to a default value
+The `mov ax, 0x00` is moving the value `0x00` in the register `ax`. It's useful for initializing the registers ds, es and ss to a default value
 
 `bp` and `sp` are the stack register, (sp = stack pointer, bp = base pointer). The stack is the local memory of your program, it's where all the local variables are stored. By definition the stack is growing downward (from high address to low address). The base pointer is the beginning of the stack and the stack pointer is the current position of the stack. We are setting both to `0x7c00` because we are beginning all the kernel code at this address so when the stack is growing it will not overlapping the kernel code.
 
-After the start label that will init all the usefull register we need to load the disk and switch to the protected mode. To do this we have a label in 16bits mode that manage all of this.
+After the start label that will init all the useful register we need to load the disk and switch to the protected mode. To do this we have a label in 16bits mode that manage all of this.
 
 ```nasm
 [bits 16]

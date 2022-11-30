@@ -1,47 +1,72 @@
 # INTRODUCTION <a name="introduction"></a>
 
-This document explains you how idt/isr is working and how it's implemented in the project.
-The ISR (Interrupt Service Routine) and the IDT (Interrupt Descriptor Table) two importants parts of the PM. The ISR is the function that is called when an interrupt is triggered. The IDT is the table that contains the address of the ISR and the privilege level of the interrupt.
-An interrupt is a signal that is sent to the CPU when an event occurs. The CPU can't handle all the interrupts at the same time, so it has to prioritize them. The priority is defined by the privilege level of the interrupt. The higher the privilege level, the higher the priority. The privilege level is defined in the IDT. There is also an other type of interrupts that's called IRQ, the difference between IRQ and ISR is that the IRQ is handled by the PIC (Programmable Interrupt Controller) and the ISR is handled by the CPU. The PIC is a hardware that is used to handle multiple interrupts at the same time. The PIC is connected to the CPU through the IRQ lines. The PIC has 16 IRQ lines, so it can handle 16 interrupts at the same time.
-To be simple, the ISR is the function that is called when an interrupt is triggered by the CPU and the IRQ is the function that is called when an interrupt is triggered by the PIC (keyboard, mouse, etc...).
-ISR and IRQ have the same data structures
+The interrupts are the main parts of the communication between the CPU and the kernel. But what are they? How do they work? How can we use them? This document will try to answer these questions.
+
+What are interrupts ?
+When you are doing something wrong like dividing by zero, the CPU will send an interrupt to the kernel. The kernel will be processed in priority order. This is the main usage of the interrupts, but you can also program your own interrupts. `ISR` (Interrupts Sub Routine) is the interrupts used by the CPU. `IRQ` (Interrupt Request) is the interrupts used by the hardware (programmable interrupts). `ISR` and `IRQ` are managed by the `IDT` (Interrupt Descriptor Table). It's two names for the same thing.
+
+How do they work ?
+In PM there are `256` possibles interrupts. The first `32` are reserved for the CPU (to handle basic things as the division by zero). The other `224` are free to use. We cannot program the behaving of the interrupts but we can define `callbacks`, a callback is a function that will be called when the interrupt is triggered. With this, when the interrupt x is triggered, the callback x will be called.
+
+How can we use them ?
+To use the interrupts, you need to define a datastructure named `IDT`, it's an array of entries describing each 256 possible entries. Each entry is composed of a pointer to the callback and some flags. When your `IDT` is ready, you need to load it with the `lidt` instruction. After that, you can enable the interrupts with the `sti` instruction. Now, when an interrupt is triggered, the callback will be called.
 
 # TABLE OF CONTENTS
 
 - [INTRODUCTION](#introduction)
-- [How it works](#how-it-works)
-- [How to add an ISR](#how-to-add-an-isr)
-- [Our implementation](#our-implementation)
+- [IMPLEMENTATION](#implementation)
+- [FILES](#files)
 
-# How it works <a name="how-it-works"></a>
+# IMPLEMENTATION <a name="implementation"></a>
 
-Like I explained in the [introduction part](#introduction). An ISR is a callback function that's being called when an interrupt is triggered. All thoses callbacks are stored in the IDT. The IDT is a table likes the GDT. It contains many entries. Each entry contains the address of the ISR and the privilege level of the interrupt.
-To be more precise, an entry looks like this:
+To be easier to understand we are implementing the `IDT` in C. Like I said previously, the IDT is just a table of entries. An entry in the `IDT` is shaped like this:
+- `base_low`: The lower 16 bits of the address to jump to when this interrupt fires. (2 bytes)
+- `selector`: Kernel segment selector. (2 bytes)
+- `zero`: This must always be zero. (1 byte)
+- `flags`: More information about the entry. (1 byte)
+- `base_high`: The upper 16 bits of the address to jump to. (2 bytes)
 
-- 16 bits: `low bytes` of the ISR address
-- 16 bits: `segment selector` (the GDT offset of the segment)
-- 8 bits: `reserved` (always 0)
-- 8 bits: `privilege level` (flags)
-- 16 bits: `high bytes` of the ISR address
+In total an entry is 8 bytes. The C implementation can be this (Actually defined [here](../../../src/interrupts/idt.h)):
+```c
+typedef struct idt_entry_s {
+    uint16_t base_low;
+    uint16_t selector;
+    uint8_t zero;
+    uint8_t flags;
+    uint16_t base_high;
+} __attribute__((packed)) idt_entry_t;
+```
+If you don't know what `__attribute__((packed))` does, it's just to tell the compiler to not add padding between the fields of the structure. It's really useful here because we want to have a structure of 8 bytes and not more. More information about this can be found [here](https://gcc.gnu.org/onlinedocs/gcc-4.8.1/gcc/Type-Attributes.html).
 
-The IDT has a maximum size of 256 entries. Each entry is 8 bytes long. So the IDT has a maximum size of 2048 bytes.
-You have to know that the firsts 32 entries are mandatory. They are used by the CPU to handle the basic exceptions. 
-When you had setup all the entries, you have to load the IDT in the CPU. To do that, you have to use the `lidt` instruction. This instruction takes a `IDT descriptor` as parameter. The `IDT descriptor` is a structure that contains the address of the IDT and the size of the IDT -1. The structure looks like this:
+the `idt_entry_t` is just a structure of one entry, but we need a table of entries. It also must be used by many functions (for example to set an entry, a flag, remove an entry, etc...). So we need to make it global. In the file [idt.c](../../../src/interrupts/idt.c) we can see this:
+```c
+static idt_entry_t idt_entries[MAX_IDT_ENTRIES];
+```
+We are creating a global named `idt_entries` that is an array of `idt_entry_t` of size `MAX_IDT_ENTRIES`. `MAX_IDT_ENTRIES` is defined in the file [idt.h](../../../src/interrupts/idt.h) and is equal to `256`.
+```c
+#define MAX_IDT_ENTRIES 256
+```
+We are using the `static` keyword to make it private to the file. It's not really necessary but it's a good practice to do it.
 
-- 16 bits: `size` of the IDT -1
-- 32 bits: `address` of the IDT
+Also like the `GDT`, we need a structure to describe the `IDT`, it must contains:
+- `limit`: The size of the `IDT` minus one. (2 bytes)
+- `base`: The address of the first element of the `IDT`. (4 bytes)
 
-it's a structure of 6 bytes.
+This descriptor must be passed to the `lidt` instruction. In C, the implementation can be this:
+```c
+typedef struct idt_descriptor_s {
+    uint16_t limit;
+    idt_entry_t *idt_start;
+} __attribute__((packed)) idt_descriptor_t;
+```
+The `idt_entry_t *idt_start` is a pointer to the `IDT`, a pointer is an address of 4 bytes. We can change the type of the pointer to `uint32_t` if we want to be more precise, but it's not really necessary and it's more understandable like this.
 
-# How to add an ISR <a name="how-to-add-an-isr"></a>
+Once we have our `IDT` we can create functions to set an entry, remove an entry, set a flag, etc... In the file [idt.c](../../../src/interrupts/idt.c). All the documentation can be found in the file [idt.md](idt.md)
 
-To add an ISR in theory you just have to create an entry in the interrupt index that you want and load the idt with `lidt`
+Once we had set the shape of our `IDT`, we can fill it with our callbacks, the definitions of the callbacks can be found in the file [interrupts.asm](../../../src/interrupts/interrupts.asm). The documentation can be found in the file [interrupts.md](interrupts.md). Those callbacks are given to the `IDT` in the file [isr.c](../../../src/interrupts/isr.c). The documentation can be found in the file [isr.md](isr.md).
 
-# Our implementation <a name="our-implementation"></a>
+# FILES <a name="files"></a>
 
-We implemented the ISR/IDT with three files
-
-- [interrupts.asm](../../../src/interrupts/interrupts.asm): It's the file containing the ISR setup see the [doc](interrupts_asm.md) for more information
-- [isr.c](../../../src/interrupts/isr.c): It's the file containing the ISR callback functions and the initialization of all the ISR.
-- [idt.c](../../../src/interrupts/idt.c): It's the file containing the IDT setup and the initialization of all the IDT entries.
-
+- [idt.c](../../../src/interrupts/idt.c): It's describing the `IDT` and it's providing functions to manipulate it.
+- [isr.c](../../../src/interrupts/isr.c): This is the file that contains all the initialization of our `IDT`. So it will call the functions to set the entries, set the flags, etc... (It's called `ISR` but in fact it contains all the interrupts, not only the `ISR`).
+- [interrupts.asm](../../../src/interrupts/interrupts.asm): This file contains all the callbacks that will be called when an interrupt is triggered. It must be in assembly because we have data that are not accessible directly in C, like the code errors or the interrupt number.

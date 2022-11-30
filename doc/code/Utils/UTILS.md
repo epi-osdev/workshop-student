@@ -1,7 +1,7 @@
 # INTRODUCTION
 
-This is the introduction of all utils, it's all the usefull functions that you can use to access some datas and some drivers.
-For now it's only including some folders with functions but in the future it will be more complex and more usefull. So it will be a good idea to compile it with other makefiles.
+This is the introduction of all utils, it's all the useful functions that you can use to access some datas and some drivers.
+For now it's only including some folders with functions but in the future it will be more complex and more useful. So it will be a good idea to compile it with other makefiles.
 An important things about the utils is the fact that only one file is needed to be included in your other projects to use all the functions. So it's **FORBIDDEN** to include any other files.
 
 # TABLE OF CONTENTS
